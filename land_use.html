@@ -6,7 +6,7 @@
 -->
 <html>
 	<head>
-		<title>Tab title</title>	%asdasd
+		<title>Land Cover Change Analysis | Carlos Cárdenas</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
@@ -156,25 +156,25 @@ areas = []
 
 # Process each year's data
 for filepath in filepaths:
-with rasterio.open(filepath) as src:
-window = from_bounds(x_min, y_min, x_max, y_max, src.transform)
-image = src.read(window=window)
-if image.shape[0] == 1:
-	image = image[0]
-	
-# Reclassify the image
-new_image = np.full_like(image, -1)
-for old_class, new_class in old_to_new_mapping.items():
-	new_image[image == old_class] = new_class
+	with rasterio.open(filepath) as src:
+		window = from_bounds(x_min, y_min, x_max, y_max, src.transform)
+		image = src.read(window=window)
+	if image.shape[0] == 1:
+		image = image[0]
 
-# Calculate area (0.09 km² per pixel)
-unique, counts = np.unique(new_image, return_counts=True)
-mask = np.isin(unique, list(class_names.keys()))
-unique, counts = unique[mask], counts[mask]
-area = counts * 0.09
+	# Reclassify the image
+	new_image = np.full_like(image, -1, dtype=np.int16)
+	for old_class, new_class in old_to_new_mapping.items():
+		new_image[image == old_class] = new_class
 
-max_area = max(max_area, np.max(area))
-areas.append((unique, area))
+	# Calculate area (300 m pixels = 0.09 km² each)
+	unique, counts = np.unique(new_image, return_counts=True)
+	mask = np.isin(unique, list(new_classes.keys()))
+	unique, counts = unique[mask], counts[mask]
+	area = counts * 0.09
+
+	max_area = max(max_area, np.max(area))
+	areas.append((unique, area))
 									</code></pre>
 									
 									<h2>Step 8: Create Visualizations</h2>
@@ -189,7 +189,7 @@ for filepath, (unique, area) in zip(filepaths, areas):
 			image = image[0]
 			
 		# Reclassify and color
-		new_image = np.full_like(image, -1)
+		new_image = np.full_like(image, -1, dtype=np.int16)
 		for old_class, new_class in old_to_new_mapping.items():
 			new_image[image == old_class] = new_class
 		colored_new_image = apply_colormap(new_image, new_colormap)
@@ -207,7 +207,7 @@ for filepath, (unique, area) in zip(filepaths, areas):
 		
 		# Plot the bar chart
 		ax1 = plt.subplot(gs[1])
-		labels = [class_names[cls] for cls in unique]
+		labels = [new_classes[cls] for cls in unique]
 		ax1.bar(labels, area, color=[np.array(new_colormap[cls])/255 for cls in unique])
 		ax1.set_title('Area of Each Land Use Class (km²)')
 		ax1.set_xlabel('Class')
