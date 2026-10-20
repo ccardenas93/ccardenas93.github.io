@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<!--
+	Forty by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html lang="en">
+	<head>
+		<title>Projects | Carlos C&aacute;rdenas</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<meta name="description" content="Hydrology, climate and geospatial projects by Carlos Cardenas." />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="stylesheet" href="assets/css/custom.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Header -->
+					<header id="header" class="alt style2">
+						<a href="index.html" class="logo"><strong>Carlos C&aacute;rdenas</strong> <span>portfolio</span></a>
+						<nav>
+							<a href="#menu">Menu</a>
+						</nav>
+					</header>
+
+				<!-- Menu -->
+					<nav id="menu">
+						<ul class="links">
+							<li><a href="index.html">Home</a></li>
+							<li><a href="projects.html">Projects</a></li>
+							<li><a href="tutorials.html">Tutorials</a></li>
+							<li><a href="landing.html">3D maps</a></li>
+							<li><a href="tempus.html">Satellite images</a></li>
+						</ul>
+						<ul class="actions stacked">
+							<li><a href="index.html#contact" class="button primary fit">Contact</a></li>
+						</ul>
+					</nav>
+
+
+				<!-- Banner -->
+					<section id="banner" class="style2">
+						<div class="inner">
+							<span class="image">
+								<img src="images/weather_forecast.jpg" alt="" />
+							</span>
+							<header class="major">
+								<h1>Projects</h1>
+							</header>
+							<div class="content">
+								<p>Forecasting systems, climate and geospatial analysis, and the web platforms that put them in front of people.</p>
+							</div>
+						</div>
+					</section>
+
+				<!-- Main -->
+					<div id="main">
+
+							<section id="forecasting">
+								<div class="inner">
+									<header class="major">
+										<h2>Forecasting and hydrology</h2>
+									</header>
+									<div class="row gtr-200">
+										<div class="col-6 col-12-medium project">
+											<h3>Hourly temperature forecast for Quito (I&ntilde;aquito station)</h3>
+											<p class="tags">Python &middot; ECMWF open data &middot; WRF &middot; GitHub Actions &middot; Plotly</p>
+											<p>An operational forecast that runs every hour with no server: GitHub Actions pulls station observations, ECMWF open data and the national WRF run, applies a model output statistics (MOS) correction fitted per hour of day, and publishes the forecast with an 80% uncertainty band. Every forecast is archived and verified, so the page reports its own skill against raw ECMWF, persistence and the diurnal climatology. Over six months of verification the correction took the mean absolute error from about 2.8 &deg;C (raw ECMWF) to about 1 &deg;C.</p>
+											<ul class="actions"><li><a href="https://ccardenas93.github.io/weather_forecast/forecast_Inaquito.html" class="button small primary">Live forecast</a></li><li><a href="https://github.com/ccardenas93/weather_forecast" class="button small">Code</a></li><li><a href="tutorial_mos.html" class="button small">Tutorial</a></li></ul>
+										</div>
+										<div class="col-6 col-12-medium project">
+											<h3>Andean HydroMet Sentinel</h3>
+											<p class="tags">Tethys Platform &middot; Django &middot; Python</p>
+											<p>A Tethys Platform app built for the Tethys Summit 2026 app contest. It packages the station forecast workflow (observations, ECMWF, local bias correction, forecast archive and verification) as an installable web app, with an offline demo mode.</p>
+											<ul class="actions"><li><a href="https://github.com/ccardenas93/tethys_app" class="button small primary">Code</a></li></ul>
+										</div>
+										<div class="col-6 col-12-medium project">
+											<h3>National hydrometeorological platform (INAMHI GEOGLOWS)</h3>
+											<p class="tags">Angular 17 &middot; Django &middot; PostgreSQL &middot; GeoServer &middot; MapLibre</p>
+											<p>With Fundaci&oacute;n EcoCiencia I maintain and extend Ecuador's public hydrometeorological platform: river forecasts from GEOGLOWS, WRF, satellite precipitation, lightning and soil moisture. My work covers a new Angular frontend, data pipelines that feed the maps, production deployment and performance: the first frame of the map animations went from 6&ndash;14 s to about 0.35 s. I am also building climate-variability tools that relate ocean indices to river-flow climatologies across the country.</p>
+											<ul class="actions"><li><a href="https://inamhi.geoglows.org/" class="button small primary">Platform</a></li><li><a href="https://github.com/Fundacion-Ecociencia/inamhi-geoglows-frontend" class="button small">Frontend code</a></li></ul>
+										</div>
+										<div class="col-6 col-12-medium project">
+											<h3>Wildfire hazard platform for a fire department</h3>
+											<p class="tags">Python &middot; Dash &middot; Docker &middot; ERA5 &middot; GIS</p>
+											<p>Consultancy for a municipal fire department in the Andes. I built a wildfire-occurrence hazard index on a 500 m grid that combines station meteorology, terrain susceptibility and fuel dryness, and validated it against a fire season that was not used to build it. The work ships as a set of Docker services: dashboards of the fire record and weather, meteorological thresholds, and an interactive map where each cell shows how its score was built.</p>
+											<p class="note">Private work, described without client details.</p>
+										</div>
+										<div class="col-6 col-12-medium project">
+											<h3>Machine learning for streamflow</h3>
+											<p class="tags">Python &middot; scikit-learn &middot; pandas</p>
+											<p>A set of notebooks on data-driven runoff modelling: baseflow separation, rainfall lag-time features, Random Forest hyperparameter search scored with NSE and RMSE, and raster-based runoff routing per catchment.</p>
+											<ul class="actions"><li><a href="https://github.com/ccardenas93/Baseflow" class="button small primary">Baseflow</a></li><li><a href="https://github.com/ccardenas93/lagtime" class="button small">Lag time</a></li><li><a href="https://github.com/ccardenas93/hyperparameter" class="button small">Hyperparameters</a></li><li><a href="https://github.com/ccardenas93/Routing_Runoff" class="button small">Routing</a></li></ul>
+										</div>
+									</div>
+								</div>
+							</section>
+							<section id="climate">
+								<div class="inner">
+									<header class="major">
+										<h2>Climate and remote sensing</h2>
+									</header>
+									<div class="row gtr-200">
+										<div class="col-6 col-12-medium project">
+											<h3>3D wind and ocean globe</h3>
+											<p class="tags">React &middot; three.js &middot; Open-Meteo &middot; ERA5</p>
+											<p>An interactive globe where particles follow the 10 m wind field over the next five days, with cloud and sea-surface temperature layers and a timeline.</p>
+											<ul class="actions"><li><a href="https://github.com/ccardenas93/climate-wind-globe-dashboard" class="button small primary">Code</a></li></ul>
+										</div>
+										<div class="col-6 col-12-medium project">
+											<h3>Watershed analysis toolkit</h3>
+											<p class="tags">Google Earth Engine &middot; geemap &middot; HydroSHEDS &middot; MapBiomas</p>
+											<p>Tools for basin work: morphometric indices from HydroSHEDS, main-channel extraction, land-cover change from MapBiomas, an optical-flow river velocimetry app and a synthetic bathymetry viewer.</p>
+											<ul class="actions"><li><a href="https://github.com/ccardenas93/ecociencia" class="button small primary">Code</a></li></ul>
+										</div>
+										<div class="col-6 col-12-medium project">
+											<h3>Climate projections for adaptation planning</h3>
+											<p class="tags">Python &middot; Streamlit &middot; CMIP6 &middot; xarray</p>
+											<p>A Streamlit app used in a climate-adaptation workshop: it downloads and clips climate projections for a territory, computes potential evapotranspiration and the water balance, and exports maps, charts and a report that participants can use without writing code.</p>
+											<p class="note">Private work, described without client details.</p>
+										</div>
+										<div class="col-6 col-12-medium project">
+											<h3>Temperature trends in Ecuador</h3>
+											<p class="tags">Python &middot; ERA5-Land &middot; rasterio &middot; cartopy</p>
+											<p>Temperature analysis for Ecuador's four regions (Coast, Andes, Amazon, Gal&aacute;pagos) from ERA5-Land: heat maps, animations and linear trends.</p>
+											<ul class="actions"><li><a href="https://github.com/ccardenas93/Temperature_Analysis_EC" class="button small primary">Code</a></li></ul>
+										</div>
+										<div class="col-6 col-12-medium project">
+											<h3>Land-cover change by basin</h3>
+											<p class="tags">Python &middot; MapBiomas &middot; HydroBASINS</p>
+											<p>Land-cover change between 2004 and 2023 summarized per HydroBASINS basin with zonal statistics.</p>
+											<ul class="actions"><li><a href="https://github.com/ccardenas93/raisg" class="button small primary">Code</a></li><li><a href="land_use.html" class="button small">Related tutorial</a></li></ul>
+										</div>
+									</div>
+								</div>
+							</section>
+							<section id="apps">
+								<div class="inner">
+									<header class="major">
+										<h2>Web platforms and apps</h2>
+									</header>
+									<div class="row gtr-200">
+										<div class="col-6 col-12-medium project">
+											<h3>Oplanner, practice management for dental specialists</h3>
+											<p class="tags">Flutter &middot; Firebase &middot; TypeScript API &middot; CI/CD</p>
+											<p>A web and mobile app for specialists who work across several clinics: appointments and follow-ups, Google Calendar sync, a per-surface FDI odontogram, payments and Ecuadorian electronic invoicing. It is in production, deploys on every push and is backed by more than a thousand automated tests.</p>
+											<ul class="actions"><li><a href="https://oplanner.net/" class="button small primary">Website</a></li></ul>
+										</div>
+										<div class="col-6 col-12-medium project">
+											<h3>Hydrometeorology tools hub</h3>
+											<p class="tags">Python &middot; GitHub Actions &middot; GitHub Pages</p>
+											<p>A self-updating page with a daily precipitation map, river-flow alerts, fire hotspots and soil moisture, rebuilt automatically by scheduled jobs.</p>
+											<ul class="actions"><li><a href="https://dpainamhi.github.io/tools/" class="button small primary">Live</a></li><li><a href="https://github.com/DPAINAMHI/tools" class="button small">Code</a></li></ul>
+										</div>
+										<div class="col-6 col-12-medium project">
+											<h3>Walking isochrones for the Quito Metro</h3>
+											<p class="tags">React &middot; Leaflet &middot; Turf.js</p>
+											<p>A map of how far you can walk in 5 to 30 minutes from each Quito Metro station.</p>
+											<ul class="actions"><li><a href="https://ccardenas93.github.io/quito-metro-isochrones/" class="button small primary">Live</a></li><li><a href="https://github.com/ccardenas93/quito-metro-isochrones" class="button small">Code</a></li></ul>
+										</div>
+										<div class="col-6 col-12-medium project">
+											<h3>CapiFiesta, a math game for kids</h3>
+											<p class="tags">JavaScript &middot; Capacitor &middot; Android &middot; iOS</p>
+											<p>A Spanish and English adaptation of the open-source Dopa Drill math game, packaged for Android and iOS, with child-safe ads and no personal data collected.</p>
+											<ul class="actions"><li><a href="dopa-drill/privacy.html" class="button small primary">Privacy policy</a></li><li><a href="https://github.com/ccardenas93/dopa-drill" class="button small">Code</a></li></ul>
+										</div>
+										<div class="col-6 col-12-medium project">
+											<h3>Medical imaging study opener</h3>
+											<p class="tags">Python &middot; libarchive &middot; DICOM</p>
+											<p>A desktop utility that unpacks compressed CBCT/DICOM studies (RAR5, ZIP, 7z), checks that every file is valid DICOM and opens the study in the Weasis viewer.</p>
+											<p class="note">Private work, described without client details.</p>
+										</div>
+										<div class="col-6 col-12-medium project">
+											<h3>codex-notch</h3>
+											<p class="tags">Swift &middot; macOS</p>
+											<p>A native macOS terminal that lives in the screen notch and hosts a local coding agent, with an approval interface and task queue.</p>
+											<ul class="actions"><li><a href="https://github.com/ccardenas93/codex-notch" class="button small primary">Code</a></li></ul>
+										</div>
+									</div>
+								</div>
+							</section>
+					</div>
+
+
+				<!-- Footer -->
+					<footer id="footer">
+						<div class="inner">
+							<ul class="icons">
+								<li><a href="https://github.com/ccardenas93" class="icon brands alt fa-github"><span class="label">GitHub</span></a></li>
+								<li><a href="https://www.linkedin.com/in/ccardenas93/" class="icon brands alt fa-linkedin-in"><span class="label">LinkedIn</span></a></li>
+								<li><a href="https://twitter.com/karsk8" class="icon brands alt fa-twitter"><span class="label">Twitter</span></a></li>
+							</ul>
+							<ul class="copyright">
+								<li>&copy; Carlos C&aacute;rdenas</li><li>Design: <a href="https://html5up.net">HTML5 UP</a></li>
+							</ul>
+						</div>
+					</footer>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>

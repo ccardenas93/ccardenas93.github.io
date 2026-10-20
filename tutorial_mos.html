@@ -1,0 +1,267 @@
+<!DOCTYPE HTML>
+<!--
+	Forty by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html lang="en">
+	<head>
+		<title>Forecast correction with MOS | Carlos C&aacute;rdenas</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<meta name="description" content="Tutorial: correct an ECMWF temperature forecast for one station with model output statistics in Python, and evaluate it against climatology." />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="stylesheet" href="assets/css/custom.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Header -->
+					<header id="header" class="">
+						<a href="index.html" class="logo"><strong>Carlos C&aacute;rdenas</strong> <span>portfolio</span></a>
+						<nav>
+							<a href="#menu">Menu</a>
+						</nav>
+					</header>
+
+				<!-- Menu -->
+					<nav id="menu">
+						<ul class="links">
+							<li><a href="index.html">Home</a></li>
+							<li><a href="projects.html">Projects</a></li>
+							<li><a href="tutorials.html">Tutorials</a></li>
+							<li><a href="landing.html">3D maps</a></li>
+							<li><a href="tempus.html">Satellite images</a></li>
+						</ul>
+						<ul class="actions stacked">
+							<li><a href="index.html#contact" class="button primary fit">Contact</a></li>
+						</ul>
+					</nav>
+
+
+				<!-- Main -->
+					<div id="main" class="alt">
+							<section id="one">
+								<div class="inner">
+									<header class="major">
+										<h1>Correcting a weather forecast for one station</h1>
+									</header>
+									<span class="image main"><img src="images/weather_forecast.jpg" alt="Raw ECMWF, corrected forecast and observations for one week in Quito" /></span>
+
+									<p>Global models such as ECMWF are excellent at large scales, but at a single station they
+									can be several degrees off. In Quito the raw 2 m temperature from ECMWF is usually too cold,
+									because the model grid cell averages valleys and mountains that the station does not see.
+									Model output statistics (MOS) fixes this with a regression that learns, from past forecasts
+									and observations, how the model relates to that specific place.</p>
+
+									<p>This tutorial follows the method I use in my
+									<a href="https://ccardenas93.github.io/weather_forecast/forecast_Inaquito.html">hourly forecast for the I&ntilde;aquito station</a>.
+									You will build the predictors, fit one regression per hour of day, and evaluate it the honest
+									way: walking forward in time and comparing against the diurnal climatology.</p>
+
+									<h2>What you need</h2>
+									<ul>
+										<li><code>observations.csv</code> with columns <code>time, temp_c</code>: station observations in UTC.</li>
+										<li><code>forecasts.csv</code> with columns <code>init_time, valid_time, ecmwf_c</code>: one row per forecast run and lead time.</li>
+										<li>Python with <code>pandas</code> and <code>numpy</code>. For step 1 also <code>ecmwf-opendata</code>, <code>xarray</code> and <code>cfgrib</code>.</li>
+									</ul>
+									<p>MOS needs history. Start archiving forecasts now; after about a month you can train, and after
+									two months the results become stable.</p>
+
+									<h2>Step 1: Archive ECMWF forecasts at your station</h2>
+									<p>ECMWF publishes its open forecasts four times a day. This script downloads the 2 m temperature,
+									extracts the nearest grid point and appends it to <code>forecasts.csv</code>. Run it on a schedule
+									(cron or a GitHub Actions workflow) so the archive grows by itself.</p>
+									<pre><code>from ecmwf.opendata import Client
+import pandas as pd
+import xarray as xr
+
+client = Client(source=&quot;aws&quot;)      # public mirror, no account needed
+client.retrieve(
+    type=&quot;fc&quot;,
+    param=&quot;2t&quot;,                    # 2 m temperature
+    step=list(range(0, 147, 3)),   # every 3 h out to about 6 days
+    target=&quot;ecmwf_2t.grib2&quot;,
+)
+
+ds = xr.open_dataset(&quot;ecmwf_2t.grib2&quot;, engine=&quot;cfgrib&quot;)
+lat, lon = -0.18, -78.49           # replace with your station
+point = ds[&quot;t2m&quot;].sel(latitude=lat, longitude=lon, method=&quot;nearest&quot;) - 273.15
+
+run = point.to_dataframe(name=&quot;ecmwf_c&quot;).reset_index()
+run[&quot;init_time&quot;] = pd.to_datetime(ds[&quot;time&quot;].values)
+run[&quot;valid_time&quot;] = pd.to_datetime(run[&quot;valid_time&quot;])
+run[[&quot;init_time&quot;, &quot;valid_time&quot;, &quot;ecmwf_c&quot;]].to_csv(
+    &quot;forecasts.csv&quot;, mode=&quot;a&quot;, header=False, index=False)
+</code></pre>
+
+									<h2>Step 2: Settings and data</h2>
+									<p>Four numbers control the method. The climatology uses the last 30 days, the regression is
+									trained on the last 60, the latest observed anomaly fades with a 36-hour time scale, and an hour
+									of day needs at least 20 cases before we trust its fit.</p>
+									<pre><code>import numpy as np
+import pandas as pd
+
+obs = pd.read_csv(&quot;observations.csv&quot;, parse_dates=[&quot;time&quot;]).set_index(&quot;time&quot;)[&quot;temp_c&quot;].sort_index()
+fc = pd.read_csv(&quot;forecasts.csv&quot;, parse_dates=[&quot;init_time&quot;, &quot;valid_time&quot;])
+
+CLIM_DAYS = 30     # window for the hour-of-day climatology
+TRAIN_DAYS = 60    # trailing window used to fit the regression
+DECAY_H = 36       # e-folding time of the observed anomaly (hours)
+MIN_SAMPLES = 20   # minimum cases per hour before trusting a fit
+</code></pre>
+
+									<h2>Step 3: The baseline that matters</h2>
+									<p>Near the equator the diurnal cycle dominates temperature. Persistence (tomorrow equals today)
+									is a weak benchmark; the mean temperature for each hour of day over the last month is a strong
+									one. A model has skill only if it beats this climatology.</p>
+									<pre><code>def climatology(obs, end, days=CLIM_DAYS):
+    &quot;&quot;&quot;Mean observation by hour of day over the window that ends at `end`.&quot;&quot;&quot;
+    window = obs[(obs.index &gt; end - pd.Timedelta(days=days)) &amp; (obs.index &lt;= end)]
+    return window.groupby(window.index.hour).mean()
+</code></pre>
+
+									<h2>Step 4: Predictors known at forecast time</h2>
+									<p>For every forecast run we add three predictors: the raw ECMWF value, the climatology for that
+									hour, and the latest observed anomaly, decayed with lead time. The anomaly carries information
+									the model does not have (a cloudy morning, a cold front that arrived early), and the decay
+									stops it from dominating days ahead. Everything is computed with data available at
+									<code>init_time</code>, so there is no leakage from the future.</p>
+									<pre><code>def add_predictors(run, obs, init):
+    &quot;&quot;&quot;Predictors that are known at initialization time, nothing from the future.&quot;&quot;&quot;
+    clim = climatology(obs, init)
+    past = obs[obs.index &lt;= init]
+    last_time, last_value = past.index[-1], past.iloc[-1]
+    last_anomaly = last_value - clim.get(last_time.hour, np.nan)
+    hours_ahead = (run[&quot;valid_time&quot;] - last_time).dt.total_seconds() / 3600
+
+    run = run.copy()
+    run[&quot;hour&quot;] = run[&quot;valid_time&quot;].dt.hour
+    run[&quot;clim_c&quot;] = run[&quot;hour&quot;].map(clim)
+    run[&quot;anom_c&quot;] = last_anomaly * np.exp(-hours_ahead.clip(lower=0) / DECAY_H)
+    return run
+</code></pre>
+									<pre><code>table = pd.concat(
+    add_predictors(run, obs, init)
+    for init, run in fc.groupby(&quot;init_time&quot;)
+    if (obs.index &lt;= init).sum() &gt; 0
+)
+table[&quot;obs_c&quot;] = table[&quot;valid_time&quot;].map(obs)
+
+FEATURES = [&quot;ecmwf_c&quot;, &quot;clim_c&quot;, &quot;anom_c&quot;]
+</code></pre>
+
+									<h2>Step 5: One regression per hour of day</h2>
+									<p>The model error at 15:00 is not the error at 03:00: afternoon convection and night-time
+									cooling behave differently. Fitting one least-squares regression per hour of day captures that,
+									and an hour without enough cases falls back to climatology.</p>
+									<p class="formula"><code>observed = a + b &middot; ECMWF + c &middot; climatology + d &middot; anomaly</code></p>
+									<pre><code>def fit(train):
+    &quot;&quot;&quot;One least-squares regression per hour of day.&quot;&quot;&quot;
+    coefs = {}
+    train = train.dropna(subset=FEATURES + [&quot;obs_c&quot;])
+    for hour, group in train.groupby(&quot;hour&quot;):
+        if len(group) &lt; MIN_SAMPLES:
+            continue
+        X = np.column_stack([np.ones(len(group)), group[FEATURES]])
+        coefs[hour], *_ = np.linalg.lstsq(X, group[&quot;obs_c&quot;], rcond=None)
+    return coefs
+</code></pre>
+									<pre><code>def predict(run, coefs):
+    X = np.column_stack([np.ones(len(run)), run[FEATURES]])
+    pred = np.array([X[i] @ coefs[h] if h in coefs else np.nan
+                     for i, h in enumerate(run[&quot;hour&quot;])])
+    # Fall back to climatology when an hour has no fit yet
+    return np.where(np.isnan(pred), run[&quot;clim_c&quot;], pred)
+</code></pre>
+
+									<h2>Step 6: Walk-forward evaluation</h2>
+									<p>For each forecast run, train only on cases whose observation was already known at that time,
+									then predict the run. This reproduces what happens in operation. The first 30 days are skipped
+									because the climatology and the regression are still filling up.</p>
+									<pre><code>results = []
+for init, run in table.groupby(&quot;init_time&quot;):
+    train = table[(table[&quot;valid_time&quot;] &lt;= init) &amp;
+                  (table[&quot;init_time&quot;] &gt;= init - pd.Timedelta(days=TRAIN_DAYS))]
+    coefs = fit(train)
+    run = run.copy()
+    run[&quot;mos_c&quot;] = predict(run, coefs)
+    results.append(run)
+
+scored = pd.concat(results).dropna(subset=[&quot;obs_c&quot;, &quot;clim_c&quot;])
+scored = scored[scored[&quot;init_time&quot;] &gt;= scored[&quot;init_time&quot;].min() + pd.Timedelta(days=30)]
+
+for name, column in [(&quot;ECMWF raw&quot;, &quot;ecmwf_c&quot;), (&quot;Climatology&quot;, &quot;clim_c&quot;), (&quot;MOS&quot;, &quot;mos_c&quot;)]:
+    mae = (scored[column] - scored[&quot;obs_c&quot;]).abs().mean()
+    print(f&quot;{name:12s} MAE = {mae:.2f} °C&quot;)
+print(f&quot;{len(scored)} verified cases&quot;)
+</code></pre>
+
+									<h2>Results for Quito</h2>
+									<p>With six months of real data from the I&ntilde;aquito station (April to October 2026,
+									2107 verified forecasts of hourly temperature) the script prints:</p>
+									<div class="table-wrapper">
+										<table>
+											<thead><tr><th>Method</th><th>Mean absolute error</th></tr></thead>
+											<tbody>
+												<tr><td>ECMWF raw</td><td>2.70 &deg;C</td></tr>
+												<tr><td>Diurnal climatology (30 days)</td><td>1.19 &deg;C</td></tr>
+												<tr><td>MOS (this tutorial)</td><td>0.98 &deg;C</td></tr>
+											</tbody>
+										</table>
+									</div>
+									<p>The raw model error drops by almost two thirds. The more interesting number is the gain over
+									climatology, about 0.2 &deg;C: that is the part of the forecast that comes from the weather,
+									not from the average day.</p>
+
+									<h2>Going further</h2>
+									<ul>
+										<li><b>Uncertainty.</b> Take the 80th percentile of the absolute training residuals per hour
+										and draw it as a band. Check that about 80% of observations fall inside it.</li>
+										<li><b>More predictors.</b> A regional model (WRF) or ECMWF cloud cover helps most in the
+										afternoon, the hardest hours in the Andes.</li>
+										<li><b>Independent samples.</b> If you rerun the same ECMWF cycle every hour, keep one row per
+										run and valid time, or the duplicated cases will inflate your scores.</li>
+										<li><b>Regime changes.</b> A 60-day window adapts slowly when the season changes. The anomaly
+										predictor softens this, but watch the error in transition months.</li>
+									</ul>
+
+									<ul class="actions">
+										<li><a href="https://github.com/ccardenas93/weather_forecast" class="button primary">Full operational code</a></li>
+										<li><a href="tutorials.html" class="button">All tutorials</a></li>
+									</ul>
+								</div>
+							</section>
+					</div>
+
+
+				<!-- Footer -->
+					<footer id="footer">
+						<div class="inner">
+							<ul class="icons">
+								<li><a href="https://github.com/ccardenas93" class="icon brands alt fa-github"><span class="label">GitHub</span></a></li>
+								<li><a href="https://www.linkedin.com/in/ccardenas93/" class="icon brands alt fa-linkedin-in"><span class="label">LinkedIn</span></a></li>
+								<li><a href="https://twitter.com/karsk8" class="icon brands alt fa-twitter"><span class="label">Twitter</span></a></li>
+							</ul>
+							<ul class="copyright">
+								<li>&copy; Carlos C&aacute;rdenas</li><li>Design: <a href="https://html5up.net">HTML5 UP</a></li>
+							</ul>
+						</div>
+					</footer>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
