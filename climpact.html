@@ -1,0 +1,364 @@
+<!DOCTYPE HTML>
+<!--
+	Forty by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html lang="en">
+	<head>
+		<title>Climpact in Python: benchmark against R | Carlos C&aacute;rdenas</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content="A Python engine for the Climpact climate-extremes workflow, compared value by value and timed against the original R version." />
+		<meta name="author" content="Carlos Cárdenas" />
+		<link rel="canonical" href="https://ccardenas93.github.io/climpact.html" />
+		<meta property="og:type" content="article" />
+		<meta property="og:site_name" content="Carlos Cárdenas" />
+		<meta property="og:title" content="Climpact in Python: benchmark against R | Carlos Cárdenas" />
+		<meta property="og:description" content="A Python engine for the Climpact climate-extremes workflow, compared value by value and timed against the original R version." />
+		<meta property="og:url" content="https://ccardenas93.github.io/climpact.html" />
+		<meta name="twitter:card" content="summary" />
+		<meta name="twitter:creator" content="@karsk8" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="stylesheet" href="assets/css/custom.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+		<style>
+			.cx { --r: rgba(255,255,255,0.35); --rm: #ffd166; --py: #9bf1ff; --grid: rgba(255,255,255,0.12); }
+			.cx-key { display: flex; flex-wrap: wrap; gap: 0.4em 1.5em; font-size: 0.85em; margin: 0 0 2em 0; }
+			.cx-key span { display: inline-flex; align-items: center; gap: 0.5em; }
+			.cx-key i { width: 0.9em; height: 0.9em; border-radius: 2px; display: inline-block; }
+			.cx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 1.5em; margin-bottom: 1.5em; }
+			.cx-card { border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 1.5em; min-width: 0; }
+			.cx-card h3 { font-size: 0.95em; margin: 0 0 1em 0; display: flex; justify-content: space-between; gap: 1em; flex-wrap: wrap; }
+			.cx-card h3 small { font-weight: 400; opacity: 0.6; letter-spacing: 0; text-transform: none; }
+			.cx-wide { grid-column: 1 / -1; }
+			.cx-grp { font-size: 0.75em; opacity: 0.6; margin: 0.8em 0 0.3em 0; letter-spacing: 0.05em; text-transform: uppercase; }
+			.cx-row { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 0.8em; margin-bottom: 0.5em; }
+			.cx-track { position: relative; height: 1.3em; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+			.cx-fill { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 3px; }
+			.cx-bad { background: repeating-linear-gradient(135deg, var(--r) 0 6px, transparent 6px 10px); }
+			.cx-val { font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 0.85em; text-align: right; min-width: 8em; }
+			.cx-x { font-weight: 600; margin-left: 0.5em; }
+			.cx-ok { color: #8fe3a1; font-weight: 600; margin-right: 0.4em; } .cx-no { color: #ff8a80; font-weight: 600; margin-right: 0.4em; }
+			.cx-rings { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1em; }
+			.cx-ring { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.2em; }
+			.cx-ring svg { width: 92px; height: 92px; }
+			.cx-ring b { font-size: 1.3em; font-variant-numeric: tabular-nums; }
+			.cx-ring em { font-style: normal; font-size: 0.75em; font-variant-numeric: tabular-nums; opacity: 0.8; }
+			.cx-ring span { font-size: 0.75em; opacity: 0.6; line-height: 1.3; }
+			.cx-big { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.6em; margin-bottom: 1em; }
+			.cx-big b { font-size: 2em; font-variant-numeric: tabular-nums; color: var(--py); }
+			.cx-big b.r { color: #fff; opacity: 0.7; }
+			.cx-big span { font-size: 0.85em; opacity: 0.7; }
+			.cx-chart { position: relative; }
+			.cx-chart svg { display: block; width: 100%; height: 260px; }
+			.cx-chart text { font-size: 11px; fill: rgba(255,255,255,0.6); }
+			.cx-tip { position: absolute; pointer-events: none; background: #2e3450; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 0.3em 0.6em; font-size: 0.8em; white-space: nowrap; }
+			.cx-method { border-top: 1px solid rgba(255,255,255,0.15); padding-top: 1.5em; margin-top: 1em; font-size: 0.9em; }
+			.cx-method p { opacity: 0.85; }
+		</style>
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Header -->
+					<header id="header" class="">
+						<a href="index.html" class="logo"><strong>Carlos C&aacute;rdenas</strong> <span>portfolio</span></a>
+						<nav>
+							<a href="#menu">Menu</a>
+						</nav>
+					</header>
+
+				<!-- Menu -->
+					<nav id="menu">
+						<ul class="links">
+							<li><a href="index.html">Home</a></li>
+							<li><a href="projects.html">Projects</a></li>
+							<li><a href="tutorials.html">Tutorials</a></li>
+							<li><a href="landing.html">3D maps</a></li>
+							<li><a href="tempus.html">Satellite images</a></li>
+						</ul>
+						<ul class="actions stacked">
+							<li><a href="index.html#contact" class="button primary fit">Contact</a></li>
+						</ul>
+					</nav>
+
+				<!-- Main -->
+					<div id="main" class="alt">
+						<section id="one">
+							<div class="inner cx">
+								<header class="major">
+									<h1>Climpact: R, improved R and Python</h1>
+								</header>
+								<p>Climpact computes the ET-SCI climate-extremes indices used in WMO workshops. I rebuilt its station, gridded and quality-control workflow in Python and compared every output, and every runtime, with the original R version.</p>
+
+								<div class="cx-key">
+									<span><i style="background:var(--r)"></i>Original R (Climpact v3.4.4)</span>
+									<span><i style="background:var(--rm)"></i>Improved R</span>
+									<span><i style="background:var(--py)"></i>Python</span>
+								</div>
+
+								<div class="cx-grid">
+									<section class="cx-card cx-wide">
+										<h3>Same results as R <small>identical values</small></h3>
+										<div class="cx-rings" id="parity"></div>
+									</section>
+									<section class="cx-card">
+										<h3>Batch of 24 stations <small>seconds</small></h3>
+										<div id="batch"></div>
+									</section>
+									<section class="cx-card">
+										<h3>Gridded data, 88 indices <small>seconds</small></h3>
+										<div id="grid"></div>
+									</section>
+									<section class="cx-card">
+										<h3>One station <small>seconds</small></h3>
+										<div id="station"></div>
+									</section>
+									<section class="cx-card">
+										<h3>Installation <small>seconds &middot; works?</small></h3>
+										<div id="install"></div>
+									</section>
+									<section class="cx-card cx-wide">
+										<h3>Memory and download size</h3>
+										<div id="resources"></div>
+									</section>
+									<section class="cx-card cx-wide">
+										<h3>Charts drawn in the browser &middot; TXx, Sydney <small>&deg;C &middot; dashed line: Sen's slope</small></h3>
+										<div class="cx-big"><b id="mbData">&mdash;</b><span>of data per station, instead of</span><b class="r" id="mbR">&mdash;</b><span>of charts and PDFs</span></div>
+										<div class="cx-chart" id="txx"></div>
+									</section>
+									<section class="cx-card cx-wide">
+										<h3>National network of 500 stations <small>minutes, linear projection from the measured batch</small></h3>
+										<div id="network"></div>
+									</section>
+								</div>
+
+								<div class="cx-method">
+									<h3>How it was done</h3>
+									<p>I reproduced Climpact's workflow in Python on top of maintained open-source scientific libraries. Then I ran both versions on the same inputs: Climpact's public sample station (Sydney, 1936&ndash;2015), a batch of 24 test stations and Climpact's gridded NetCDF sample. Every output file was compared value by value with the R results. Matching R exactly took some careful work on the statistical details. The timings are medians of three runs of the complete process, up to the last file written, on one Apple Silicon laptop. "Improved R" keeps the original calculations and only changes how the work is run and installed. No national or private data were used.</p>
+								</div>
+
+								<ul class="actions">
+									<li><a href="projects.html" class="button">All projects</a></li>
+									<li><a href="index.html#contact" class="button primary">Contact</a></li>
+								</ul>
+							</div>
+						</section>
+					</div>
+
+				<!-- Footer -->
+					<footer id="footer">
+						<div class="inner">
+							<ul class="icons">
+								<li><a href="https://github.com/ccardenas93" class="icon brands alt fa-github"><span class="label">GitHub</span></a></li>
+								<li><a href="https://www.linkedin.com/in/ccardenas93/" class="icon brands alt fa-linkedin-in"><span class="label">LinkedIn</span></a></li>
+								<li><a href="https://twitter.com/karsk8" class="icon brands alt fa-twitter"><span class="label">Twitter</span></a></li>
+							</ul>
+							<ul class="copyright">
+								<li>&copy; Carlos C&aacute;rdenas</li><li>Design: <a href="https://html5up.net">HTML5 UP</a></li>
+							</ul>
+						</div>
+					</footer>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+			<script>
+			(function () {
+				// Measured data (medians of 3 runs, Apple Silicon, 10 cores).
+				var TIMES = [
+					['batch','Original R','with charts',154.69],['batch','Improved R','with charts',39.14],['batch','Python','with charts',39.07],
+					['batch','Improved R','without charts',29.07],['batch','Python','without charts',12.13],
+					['grid','Original R','8 cores',198.36],['grid','Improved R','8 cores',48.88],['grid','Python','8 processes',15.96],
+					['station','Original R','with charts',8.51],['station','Improved R','with charts',8.50],['station','Python','with charts',8.56],
+					['station','Improved R','without charts',6.31],['station','Python','without charts',3.08],
+					['install','Original R','official installer',31],['install','Improved R','new installer',21.28],['install','Python','pip',10.57]
+				];
+				var INSTALL_OK = {'Original R': false, 'Improved R': true, 'Python': true};
+				var PARITY = [
+					['Station indices', 2270996, 2270995],
+					['Gridded NetCDF', 5884680, 5884680],
+					['Quality control files', 252, 252],
+					['Improved R vs R', 2736, 2736]
+				];
+				var RES = [
+					['Peak memory, gridded run', 'Original R', 5095], ['Peak memory, gridded run', 'Python', 478],
+					['Download per station', 'Charts and PDFs (R)', 19], ['Download per station', 'Data for the browser', 0.243]
+				];
+				var TXX = [[1936,37.7],[1937,36.7],[1938,36.8],[1939,45.3],[1940,41.3],[1941,39.6],[1942,41.9],[1943,37.3],[1944,39.4],[1945,38.8],[1946,40.3],[1947,34.6],[1948,36.2],[1949,36.6],[1950,39.5],[1951,37.9],[1952,41.0],[1953,41.9],[1954,36.0],[1955,40.1],[1956,36.3],[1957,42.2],[1958,36.4],[1959,34.4],[1960,42.4],[1961,41.6],[1962,36.9],[1963,36.7],[1964,40.8],[1965,38.8],[1966,35.8],[1967,38.8],[1968,36.3],[1969,38.9],[1970,36.0],[1971,35.2],[1972,39.9],[1973,39.6],[1974,38.4],[1975,39.6],[1976,37.3],[1977,41.4],[1978,37.4],[1979,39.9],[1980,41.3],[1981,38.8],[1982,41.8],[1983,40.0],[1984,36.3],[1985,39.0],[1986,39.7],[1987,37.0],[1988,39.2],[1989,36.7],[1990,40.0],[1991,40.8],[1992,35.6],[1993,37.0],[1994,40.9],[1995,36.5],[1996,null],[1997,37.9],[1998,38.2],[1999,32.5],[2000,38.7],[2001,35.9],[2002,37.9],[2003,39.0],[2004,40.0],[2005,39.0],[2006,44.2],[2007,38.7],[2008,35.0],[2009,40.9],[2010,41.3],[2011,41.5],[2012,34.2],[2013,45.8],[2014,36.5],[2015,40.9]];
+
+				var COL = {'Original R': 'var(--r)', 'Improved R': 'var(--rm)', 'Python': 'var(--py)'};
+				var ORDER = ['Original R', 'Improved R', 'Python'];
+				var NS = 'http://www.w3.org/2000/svg';
+				function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+				function svg(tag, attrs) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }
+				function fmt(v, d) { return v.toLocaleString('en-US', {minimumFractionDigits: d, maximumFractionDigits: d}); }
+				function secs(v) { return (v >= 100 ? fmt(v, 0) : fmt(v, 1)) + ' s'; }
+
+				function bar(box, label, value, max, color, text, extra, bad) {
+					var row = el('div', 'cx-row');
+					var tr = el('div', 'cx-track'); tr.setAttribute('aria-label', label);
+					var f = el('div', 'cx-fill' + (bad ? ' cx-bad' : ''));
+					f.style.width = Math.max(value / max * 100, 1.5) + '%';
+					if (!bad) f.style.background = color;
+					tr.appendChild(f);
+					var v = el('div', 'cx-val');
+					if (extra && extra.pre) v.appendChild(extra.pre);
+					v.appendChild(el('span', null, text));
+					if (extra && extra.post) v.appendChild(extra.post);
+					row.appendChild(tr); row.appendChild(v); box.appendChild(row);
+				}
+
+				function timing(id, task, groups) {
+					var box = document.getElementById(id);
+					var sel = TIMES.filter(function (r) { return r[0] === task; });
+					var max = Math.max.apply(null, sel.map(function (r) { return r[3]; }));
+					var ref = {};
+					sel.forEach(function (r) { if (r[1] === 'Original R') ref.all = r[3]; });
+					(groups || [null]).forEach(function (g) {
+						var part = sel.filter(function (r) { return g === null || r[2] === g; });
+						if (!part.length) return;
+						if (g) box.appendChild(el('div', 'cx-grp', g));
+						ORDER.forEach(function (who) {
+							part.filter(function (r) { return r[1] === who; }).forEach(function (r) {
+								var post = null;
+								if (who !== 'Original R' && ref.all) {
+									post = el('span', 'cx-x', '×' + fmt(ref.all / r[3], 1));
+									post.style.color = COL[who];
+								}
+								bar(box, who + ' ' + r[2], r[3], max, COL[who], who + ' · ' + secs(r[3]), {post: post});
+							});
+						});
+					});
+				}
+				timing('batch', 'batch', ['with charts', 'without charts']);
+				timing('grid', 'grid');
+				timing('station', 'station', ['with charts', 'without charts']);
+
+				(function () {
+					var box = document.getElementById('install');
+					var sel = TIMES.filter(function (r) { return r[0] === 'install'; });
+					var max = Math.max.apply(null, sel.map(function (r) { return r[3]; }));
+					sel.forEach(function (r) {
+						var ok = INSTALL_OK[r[1]];
+						var mark = el('span', ok ? 'cx-ok' : 'cx-no', ok ? '✓' : '✗');
+						mark.setAttribute('aria-label', ok ? 'works' : 'incomplete: calculation engine not installed');
+						bar(box, r[1], r[3], max, COL[r[1]], r[1] + ' · ' + secs(r[3]), {pre: mark}, !ok);
+					});
+					var note = el('div', 'cx-grp', 'The official installer reports success but leaves the calculation engine uninstalled.');
+					note.style.textTransform = 'none'; note.style.letterSpacing = '0';
+					box.appendChild(note);
+				})();
+
+				(function () {
+					var box = document.getElementById('parity');
+					PARITY.forEach(function (p) {
+						var share = p[2] / p[1];
+						var c = el('div', 'cx-ring');
+						var s = svg('svg', {viewBox: '0 0 92 92', role: 'img', 'aria-label': p[0] + ': ' + p[2] + ' of ' + p[1]});
+						s.appendChild(svg('circle', {cx: 46, cy: 46, r: 40, fill: 'none', stroke: 'rgba(255,255,255,0.12)', 'stroke-width': 9}));
+						var L = 2 * Math.PI * 40;
+						s.appendChild(svg('circle', {cx: 46, cy: 46, r: 40, fill: 'none', stroke: '#9bf1ff', 'stroke-width': 9,
+							'stroke-dasharray': (L * share) + ' ' + L, transform: 'rotate(-90 46 46)'}));
+						c.appendChild(s);
+						c.appendChild(el('b', null, share === 1 ? '100%' : fmt(share * 100, 5) + '%'));
+						c.appendChild(el('em', null, p[2].toLocaleString('en-US') + ' / ' + p[1].toLocaleString('en-US')));
+						c.appendChild(el('span', null, p[0]));
+						box.appendChild(c);
+					});
+				})();
+
+				(function () {
+					var box = document.getElementById('resources');
+					var cols = {'Original R': 'var(--r)', 'Python': 'var(--py)', 'Charts and PDFs (R)': 'var(--r)', 'Data for the browser': 'var(--py)'};
+					['Peak memory, gridded run', 'Download per station'].forEach(function (g) {
+						var rows = RES.filter(function (r) { return r[0] === g; });
+						var max = Math.max.apply(null, rows.map(function (r) { return r[2]; }));
+						box.appendChild(el('div', 'cx-grp', g));
+						rows.forEach(function (r) {
+							bar(box, r[1], r[2], max, cols[r[1]], r[1] + ' · ' + fmt(r[2], r[2] < 1 ? 3 : 0) + ' MB');
+						});
+					});
+					document.getElementById('mbData').textContent = fmt(0.243, 2) + ' MB';
+					document.getElementById('mbR').textContent = '19 MB';
+				})();
+
+				(function () {
+					var box = document.getElementById('network');
+					var rows = TIMES.filter(function (r) { return r[0] === 'batch'; }).map(function (r) {
+						return {who: r[1], v: r[2], min: r[3] * 500 / 24 / 60};
+					}).sort(function (a, b) { return ORDER.indexOf(a.who) - ORDER.indexOf(b.who) || b.min - a.min; });
+					var max = Math.max.apply(null, rows.map(function (r) { return r.min; }));
+					rows.forEach(function (r) { bar(box, r.who + ' ' + r.v, r.min, max, COL[r.who], r.who + ' · ' + r.v + ' · ' + fmt(r.min, 1) + ' min'); });
+				})();
+
+				function sen(pts) {
+					var p = pts.filter(function (d) { return d[1] !== null; }), s = [];
+					for (var i = 0; i < p.length; i++) for (var j = i + 1; j < p.length; j++) s.push((p[j][1] - p[i][1]) / (p[j][0] - p[i][0]));
+					function med(a) { a.sort(function (x, y) { return x - y; }); var m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; }
+					var b = med(s), a = med(p.map(function (d) { return d[1] - b * d[0]; }));
+					return {b: b, a: a, x0: p[0][0], x1: p[p.length - 1][0]};
+				}
+
+				function drawTxx() {
+					var box = document.getElementById('txx');
+					box.innerHTML = '';
+					var W = box.clientWidth || 600, H = 260, m = {t: 10, r: 12, b: 26, l: 34};
+					var xs = TXX.map(function (d) { return d[0]; }), ys = TXX.filter(function (d) { return d[1] !== null; }).map(function (d) { return d[1]; });
+					var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
+					var y0 = Math.floor(Math.min.apply(null, ys) / 2) * 2, y1 = Math.ceil(Math.max.apply(null, ys) / 2) * 2;
+					function X(v) { return m.l + (v - x0) / (x1 - x0) * (W - m.l - m.r); }
+					function Y(v) { return H - m.b - (v - y0) / (y1 - y0) * (H - m.t - m.b); }
+					var s = svg('svg', {viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Annual maximum temperature (TXx), Sydney 1936–2015, with Sen trend line'});
+					for (var t = y0; t <= y1; t += 2) {
+						s.appendChild(svg('line', {x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), stroke: 'rgba(255,255,255,0.1)'}));
+						var tx = svg('text', {x: m.l - 6, y: Y(t) + 4, 'text-anchor': 'end'}); tx.textContent = t; s.appendChild(tx);
+					}
+					var step = W < 500 ? 20 : 10;
+					for (var yr = Math.ceil(x0 / step) * step; yr <= x1; yr += step) {
+						var lx = svg('text', {x: X(yr), y: H - 8, 'text-anchor': 'middle'}); lx.textContent = yr; s.appendChild(lx);
+					}
+					var d = '', pen = false;
+					TXX.forEach(function (p) {
+						if (p[1] === null) { pen = false; return; }
+						d += (pen ? 'L' : 'M') + X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1); pen = true;
+					});
+					s.appendChild(svg('path', {d: d, fill: 'none', stroke: '#9bf1ff', 'stroke-width': 1.6}));
+					TXX.forEach(function (p) { if (p[1] !== null) s.appendChild(svg('circle', {cx: X(p[0]), cy: Y(p[1]), r: 2.5, fill: '#9bf1ff'})); });
+					var k = sen(TXX);
+					s.appendChild(svg('line', {x1: X(k.x0), x2: X(k.x1), y1: Y(k.a + k.b * k.x0), y2: Y(k.a + k.b * k.x1), stroke: '#fff', 'stroke-width': 1.5, 'stroke-dasharray': '5 4'}));
+					var dot = svg('circle', {r: 5, fill: 'none', stroke: '#fff', style: 'display:none'});
+					s.appendChild(dot);
+					box.appendChild(s);
+					var tip = el('div', 'cx-tip'); tip.hidden = true; box.appendChild(tip);
+					s.addEventListener('pointermove', function (ev) {
+						var r = s.getBoundingClientRect();
+						var mx = (ev.clientX - r.left) / r.width * W;
+						var yr = Math.round(x0 + (mx - m.l) / (W - m.l - m.r) * (x1 - x0));
+						var p = TXX.filter(function (q) { return q[0] === yr; })[0];
+						if (!p || p[1] === null) { tip.hidden = true; dot.style.display = 'none'; return; }
+						dot.style.display = ''; dot.setAttribute('cx', X(p[0])); dot.setAttribute('cy', Y(p[1]));
+						tip.textContent = p[0] + ' · ' + fmt(p[1], 1) + ' °C';
+						tip.hidden = false;
+						tip.style.left = Math.min(X(p[0]) / W * r.width + 10, r.width - 110) + 'px';
+						tip.style.top = (Y(p[1]) / H * r.height - 34) + 'px';
+					});
+					s.addEventListener('pointerleave', function () { tip.hidden = true; dot.style.display = 'none'; });
+				}
+				drawTxx();
+				var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(drawTxx, 150); });
+			})();
+			</script>
+
+	</body>
+</html>
