@@ -139,8 +139,10 @@
 
 								<div class="cx-method">
 									<h3>How it was done</h3>
-									<p>I reproduced Climpact's workflow in Python on top of maintained open-source scientific libraries. Then I ran both versions on the same inputs: Climpact's public sample station (Sydney, 1936&ndash;2015), 24 synthetic test stations derived from that sample, and Climpact's gridded NetCDF sample. Every output file was compared value by value with the R results. Matching R exactly took some careful work on the statistical details. Run times are medians of three runs of the complete process, up to the last file written, on one Apple M4 computer with 10 cores; the R installations were timed once, the Python one (with charting) is the median of three. "Improved R" keeps the original calculations and only changes how the work is run and installed. No national or private data were used.</p>
+									<p>I reproduced Climpact's workflow in Python on top of maintained open-source scientific libraries. Then I ran both versions on the same inputs: Climpact's public sample station (Sydney, 1936&ndash;2015), 24 synthetic test stations derived from that sample, and Climpact's gridded NetCDF sample. Every output file was compared value by value with the R results. Matching R exactly took some careful work on the statistical details. Run times are medians of three runs of the complete process, up to the last file written, on one Apple M4 computer with 10 cores; the R installations were timed once, the Python one (with charting) is the median of three. "Improved R" keeps the original calculations and only changes how the work is run and installed. This benchmark uses only Climpact's public sample data.</p>
 								</div>
+
+								<p>The same comparison on two real Ecuadorian stations, Quito and Portoviejo, gave identical results: <a href="climpact_ecuador.html">see the results with Ecuadorian data</a>.</p>
 
 								<ul class="actions">
 									<li><a href="projects.html" class="button">All projects</a></li>
