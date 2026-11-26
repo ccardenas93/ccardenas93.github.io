@@ -102,7 +102,7 @@
 
 								<div class="cx-grid">
 									<section class="cx-card cx-wide">
-										<h3>Same results as R <small>identical values</small></h3>
+										<h3>Same results as R <small>identical outputs</small></h3>
 										<div class="cx-rings" id="parity"></div>
 									</section>
 									<section class="cx-card">
@@ -112,6 +112,7 @@
 									<section class="cx-card">
 										<h3>Gridded data, 88 indices <small>seconds</small></h3>
 										<div id="grid"></div>
+										<div class="cx-grp" style="text-transform:none;letter-spacing:0">With 8 cores the original script took longer (231 s): the whole grid fits in one block, so only one core works.</div>
 									</section>
 									<section class="cx-card">
 										<h3>One station <small>seconds</small></h3>
@@ -127,7 +128,7 @@
 									</section>
 									<section class="cx-card cx-wide">
 										<h3>Charts drawn in the browser &middot; TXx, Sydney <small>&deg;C &middot; dashed line: Sen's slope</small></h3>
-										<div class="cx-big"><b id="mbData">&mdash;</b><span>of data per station, instead of</span><b class="r" id="mbR">&mdash;</b><span>of charts and PDFs</span></div>
+										<div class="cx-big"><b id="mbData">&mdash;</b><span>of compressed index data per station, instead of</span><b class="r" id="mbR">&mdash;</b><span>of charts and PDFs</span></div>
 										<div class="cx-chart" id="txx"></div>
 									</section>
 									<section class="cx-card cx-wide">
@@ -138,7 +139,7 @@
 
 								<div class="cx-method">
 									<h3>How it was done</h3>
-									<p>I reproduced Climpact's workflow in Python on top of maintained open-source scientific libraries. Then I ran both versions on the same inputs: Climpact's public sample station (Sydney, 1936&ndash;2015), a batch of 24 test stations and Climpact's gridded NetCDF sample. Every output file was compared value by value with the R results. Matching R exactly took some careful work on the statistical details. The timings are medians of three runs of the complete process, up to the last file written, on one Apple Silicon laptop. "Improved R" keeps the original calculations and only changes how the work is run and installed. No national or private data were used.</p>
+									<p>I reproduced Climpact's workflow in Python on top of maintained open-source scientific libraries. Then I ran both versions on the same inputs: Climpact's public sample station (Sydney, 1936&ndash;2015), 24 synthetic test stations derived from that sample, and Climpact's gridded NetCDF sample. Every output file was compared value by value with the R results. Matching R exactly took some careful work on the statistical details. Run times are medians of three runs of the complete process, up to the last file written, on one Apple M4 computer with 10 cores; the R installations were timed once, the Python one (with charting) is the median of three. "Improved R" keeps the original calculations and only changes how the work is run and installed. No national or private data were used.</p>
 								</div>
 
 								<ul class="actions">
@@ -175,25 +176,25 @@
 			<script src="assets/js/main.js"></script>
 			<script>
 			(function () {
-				// Measured data (medians of 3 runs, Apple Silicon, 10 cores).
+				// Measured data (medians of 3 runs, Apple M4, 10 cores; R installations: single runs).
 				var TIMES = [
 					['batch','Original R','with charts',154.69],['batch','Improved R','with charts',39.14],['batch','Python','with charts',39.07],
 					['batch','Improved R','without charts',29.07],['batch','Python','without charts',12.13],
-					['grid','Original R','8 cores',198.36],['grid','Improved R','8 cores',48.88],['grid','Python','8 processes',15.96],
+					['grid','Original R','1 core',198.36],['grid','Improved R','8 cores',48.88],['grid','Python','8 processes',15.96],
 					['station','Original R','with charts',8.51],['station','Improved R','with charts',8.50],['station','Python','with charts',8.56],
 					['station','Improved R','without charts',6.31],['station','Python','without charts',3.08],
-					['install','Original R','official installer',31],['install','Improved R','new installer',21.28],['install','Python','pip',10.57]
+					['install','Original R','official installer',30.72],['install','Improved R','new installer',21.28],['install','Python','pip, no compilation',11.82]
 				];
 				var INSTALL_OK = {'Original R': false, 'Improved R': true, 'Python': true};
 				var PARITY = [
-					['Station indices', 2270996, 2270995],
-					['Gridded NetCDF', 5884680, 5884680],
+					['Station index values', 2270996, 2270996],
+					['Gridded NetCDF values', 5884680, 5884680],
 					['Quality control files', 252, 252],
-					['Improved R vs R', 2736, 2736]
+					['Improved R vs R (files)', 2736, 2736]
 				];
 				var RES = [
-					['Peak memory, gridded run', 'Original R', 5095], ['Peak memory, gridded run', 'Python', 478],
-					['Download per station', 'Charts and PDFs (R)', 19], ['Download per station', 'Data for the browser', 0.243]
+					['Peak memory, gridded run, 1 process', 'Original R', 5095], ['Peak memory, gridded run, 1 process', 'Python', 478],
+					['Download per station', 'Charts and PDFs (R)', 17.2], ['Download per station', 'Compressed index data', 0.243]
 				];
 				var TXX = [[1936,37.7],[1937,36.7],[1938,36.8],[1939,45.3],[1940,41.3],[1941,39.6],[1942,41.9],[1943,37.3],[1944,39.4],[1945,38.8],[1946,40.3],[1947,34.6],[1948,36.2],[1949,36.6],[1950,39.5],[1951,37.9],[1952,41.0],[1953,41.9],[1954,36.0],[1955,40.1],[1956,36.3],[1957,42.2],[1958,36.4],[1959,34.4],[1960,42.4],[1961,41.6],[1962,36.9],[1963,36.7],[1964,40.8],[1965,38.8],[1966,35.8],[1967,38.8],[1968,36.3],[1969,38.9],[1970,36.0],[1971,35.2],[1972,39.9],[1973,39.6],[1974,38.4],[1975,39.6],[1976,37.3],[1977,41.4],[1978,37.4],[1979,39.9],[1980,41.3],[1981,38.8],[1982,41.8],[1983,40.0],[1984,36.3],[1985,39.0],[1986,39.7],[1987,37.0],[1988,39.2],[1989,36.7],[1990,40.0],[1991,40.8],[1992,35.6],[1993,37.0],[1994,40.9],[1995,36.5],[1996,null],[1997,37.9],[1998,38.2],[1999,32.5],[2000,38.7],[2001,35.9],[2002,37.9],[2003,39.0],[2004,40.0],[2005,39.0],[2006,44.2],[2007,38.7],[2008,35.0],[2009,40.9],[2010,41.3],[2011,41.5],[2012,34.2],[2013,45.8],[2014,36.5],[2015,40.9]];
 
@@ -280,17 +281,17 @@
 
 				(function () {
 					var box = document.getElementById('resources');
-					var cols = {'Original R': 'var(--r)', 'Python': 'var(--py)', 'Charts and PDFs (R)': 'var(--r)', 'Data for the browser': 'var(--py)'};
-					['Peak memory, gridded run', 'Download per station'].forEach(function (g) {
+					var cols = {'Original R': 'var(--r)', 'Python': 'var(--py)', 'Charts and PDFs (R)': 'var(--r)', 'Compressed index data': 'var(--py)'};
+					['Peak memory, gridded run, 1 process', 'Download per station'].forEach(function (g) {
 						var rows = RES.filter(function (r) { return r[0] === g; });
 						var max = Math.max.apply(null, rows.map(function (r) { return r[2]; }));
 						box.appendChild(el('div', 'cx-grp', g));
 						rows.forEach(function (r) {
-							bar(box, r[1], r[2], max, cols[r[1]], r[1] + ' · ' + fmt(r[2], r[2] < 1 ? 3 : 0) + ' MB');
+							bar(box, r[1], r[2], max, cols[r[1]], r[1] + ' · ' + fmt(r[2], r[2] < 1 ? 2 : (r[2] < 100 ? 1 : 0)) + ' MB');
 						});
 					});
 					document.getElementById('mbData').textContent = fmt(0.243, 2) + ' MB';
-					document.getElementById('mbR').textContent = '19 MB';
+					document.getElementById('mbR').textContent = '17 MB';
 				})();
 
 				(function () {
